@@ -274,7 +274,7 @@ def generate_default( tests, objects, states, base_id, rl_version ) :
                 { 'name' : "version", 'pairs' : "", 'operation' : "pattern match", 'value' : "" },
                 { 'name' : "release", 'pairs' : "", 'operation' : "pattern match", 'value' : "" },
                 { 'name' : "arch", 'pairs' : "", 'operation' : "pattern match", 'value' : "" },
-                { 'name' : "filepath", 'pairs' : "", 'operation' : "pattern match", 'value' : "" }
+                { 'name' : "filepath", 'pairs': "", 'operation':"", 'value' : "/etc/rocky-release" }
             ]
         }
     )
