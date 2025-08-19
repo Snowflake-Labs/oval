@@ -152,12 +152,16 @@ def metadata( title, family, platforms, ref_id, source, references, description,
 
     cves = ''
     bugs = ''
-    for reference in references :
+    for reference in references:
+        cvss3_str = str(reference.get('cvss3')) if reference.get('cvss3') is not None else ''
+        cwe_str = str(reference.get('cwe')) if reference.get('cwe') is not None else ''
+        url_str = str(reference.get('url')) if reference.get('url') is not None else ''
+        impact_str = str(reference.get('impact')) if reference.get('impact') is not None else ''
+        public_str = str(reference.get('public')) if reference.get('public') is not None else ''
+        cve_str = str(reference.get('cve')) if reference.get('cve') is not None else ''
         cves = cves + \
-               '      <cve cvss3="' + reference[ 'cvss3' ] + '" cwe="' + \
-               reference[ 'cwe' ] + '" href="' + reference[ 'url' ] + \
-               '" impact="' + reference[ 'impact' ] + '" public="' + \
-               reference[ 'public' ] + '">' + reference[ 'cve' ] + '</cve>\n'
+            '      <cve cvss3="' + cvss3_str + '" cwe="' + cwe_str + '" href="' + url_str + \
+            '" impact="' + impact_str + '" public="' + public_str + '">' + cve_str + '</cve>\n'
 
         if 'bugref' in reference:
             bugs = bugs + \
