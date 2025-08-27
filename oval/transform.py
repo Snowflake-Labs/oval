@@ -1,5 +1,5 @@
 import re
-
+from oval import modularity_labels
 
 # version of each of the OVAL items which should rev when they change
 transform_version = {
@@ -9,7 +9,7 @@ transform_version = {
     'State'      : "1"
 }
 
-def criterias( nvras, product, rl_version ) :
+def criterias( nvras, product, rl_version, modularity_label = "" ) :
     """
     walk the nvras and create criterias which will be linked to
     tests, objects and states later in the processing chain
@@ -32,6 +32,16 @@ def criterias( nvras, product, rl_version ) :
 
         return criterias
 
+    if len(nvras) > 0 and modularity_label != "":
+        criterias.append(
+            {
+                'operator' : "AND",
+                'comment'  : f"Module {modularity_label} is enabled",
+                'id'       : "",
+                'nested'   : True,
+                'version'  : rl_version
+            }
+        )
     for nvra in nvras :
 
         # AND always has at least two items
@@ -127,6 +137,12 @@ def references( cves, fixes, impact, public ) :
 
     return references
 
+# If the package has module the synopsis is in format:
+# Severity: package_name:module [...]
+def get_modularity_label_from_synopsis(synopsis):
+    synopsis_splitted = synopsis.split(" ")
+    modularity_label = synopsis_splitted[1] if len(synopsis_splitted) >= 2 else ""
+    return modularity_label if ":" in modularity_label else ""
 
 def definitions( advisories, rl_version ) :
     """
@@ -150,8 +166,12 @@ def definitions( advisories, rl_version ) :
 
         # create criterias
         crits = criterias( [ ], "", rl_version ) # base criteria for all Rocky Linux products
+        
+        modularity_label = get_modularity_label_from_synopsis(advisory['synopsis'])
+        if modularity_label != "":
+            assert modularity_label.split(":")[0] in modularity_labels.ALLOWED_MODULARITY_LABELS, f"Not supported modularity label: {modularity_label}"
         for product in advisory[ 'affectedProducts' ] :
-            crits = crits + criterias( advisory[ 'rpms.' + product + '.nvras' ], product, rl_version )
+            crits = crits + criterias( advisory[ 'rpms.' + product + '.nvras' ], product, rl_version, modularity_label )
 
         description = \
             advisory[ 'description' ].replace( '\n', '\n\n' ) + \
