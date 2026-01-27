@@ -13,6 +13,7 @@ ALLOWED_MODULARITY_LABELS = {
   "llvm-toolset",
   "mailman",
   "mariadb",
+  "mariadb-devel",
   "maven",
   "mod_auth_openidc",
   "mysql",
