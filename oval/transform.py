@@ -107,7 +107,7 @@ def references( cves, fixes, impact, public ) :
                 'id'      : cve_id, 
                 'url'     : cve[ 'sourceLink' ],
                 'source'  : cve[ 'sourceBy' ],
-                'cvss3'   : cve[ 'cvss3BaseScore' ] + cve[ 'cvss3ScoringVector' ],
+                'cvss3'   : (cve[ 'cvss3BaseScore' ] or '') + (cve[ 'cvss3ScoringVector' ] or '') or None,
                 'cwe'     : cve[ 'cwe' ],
                 'impact'  : impact,
                 'public'  : public,
@@ -123,7 +123,7 @@ def references( cves, fixes, impact, public ) :
                         'id'      : cve_id, 
                         'url'     : cve[ 'sourceLink' ],
                         'source'  : bug[ 'source' ],
-                        'cvss3'   : cve[ 'cvss3BaseScore' ] + cve[ 'cvss3ScoringVector' ],
+                        'cvss3'   : (cve[ 'cvss3BaseScore' ] or '') + (cve[ 'cvss3ScoringVector' ] or '') or None,
                         'cwe'     : cve[ 'cwe' ],
                         'impact'  : impact,
                         'public'  : public,
@@ -144,11 +144,31 @@ def get_modularity_label_from_synopsis(synopsis):
     modularity_label = synopsis_splitted[1] if len(synopsis_splitted) >= 2 else ""
     return modularity_label if ":" in modularity_label else ""
 
+def validate_modularity_labels( advisories ) :
+    """
+    Validate all modularity labels in advisories are in the allowlist.
+    Raises AssertionError with all missing labels if any are found.
+    """
+    missing_labels = set()
+    for _, advisory in advisories.iterrows( ) :
+        if advisory[ 'name' ].split( '-' )[ 0 ] != "RLSA" :
+            continue
+        modularity_label = get_modularity_label_from_synopsis(advisory['synopsis'])
+        if modularity_label != "":
+            label_name = modularity_label.split(":")[0]
+            if label_name not in modularity_labels.ALLOWED_MODULARITY_LABELS:
+                missing_labels.add(label_name)
+    
+    if missing_labels:
+        raise AssertionError(f"Not supported modularity labels: {sorted(missing_labels)}")
+
 def definitions( advisories, rl_version ) :
     """
     walk the list of advisories and generate definitions which contain
     metadata and criteria (the later of which are used to create tests)
     """
+
+    validate_modularity_labels( advisories )
 
     definitions = [ ]
     version = 1
@@ -168,8 +188,6 @@ def definitions( advisories, rl_version ) :
         crits = criterias( [ ], "", rl_version ) # base criteria for all Rocky Linux products
         
         modularity_label = get_modularity_label_from_synopsis(advisory['synopsis'])
-        if modularity_label != "":
-            assert modularity_label.split(":")[0] in modularity_labels.ALLOWED_MODULARITY_LABELS, f"Not supported modularity label: {modularity_label}"
         for product in advisory[ 'affectedProducts' ] :
             crits = crits + criterias( advisory[ 'rpms.' + product + '.nvras' ], product, rl_version, modularity_label )
 
