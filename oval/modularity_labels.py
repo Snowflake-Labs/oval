@@ -24,6 +24,7 @@ ALLOWED_MODULARITY_LABELS = {
   "pam",
   "parfait",
   "perl-App-cpanminus",
+  "perl-DBI",
   "perl-FCGI",
   "perl",
   "php",
